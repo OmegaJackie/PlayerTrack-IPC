@@ -84,6 +84,8 @@ public class MainPresenter : IMainPresenter
                 PlayerListFilter.RecentPlayers => ServiceContext.PlayerCacheService.GetRecentPlayersCount(),
                 PlayerListFilter.PlayersByCategory => ServiceContext.PlayerCacheService.GetCategoryPlayersCount(Config.FilterCategoryId),
                 PlayerListFilter.PlayersByTag => ServiceContext.PlayerCacheService.GetTagPlayersCount(Config.FilterTagId),
+                // Search-only mode: empty list until the user types something.
+                PlayerListFilter.PlayerSearch => 0,
                 _ => 0,
             };
         }
@@ -96,6 +98,8 @@ public class MainPresenter : IMainPresenter
                 PlayerListFilter.RecentPlayers => ServiceContext.PlayerCacheService.GetRecentPlayersCount(Config.SearchInput, Config.SearchType),
                 PlayerListFilter.PlayersByCategory => ServiceContext.PlayerCacheService.GetCategoryPlayersCount(Config.FilterCategoryId, Config.SearchInput, Config.SearchType),
                 PlayerListFilter.PlayersByTag => ServiceContext.PlayerCacheService.GetTagPlayersCount(Config.FilterTagId, Config.SearchInput, Config.SearchType),
+                // Search-only mode: search across ALL players (no category/tag prefilter).
+                PlayerListFilter.PlayerSearch => ServiceContext.PlayerCacheService.GetAllPlayersCount(Config.SearchInput, Config.SearchType),
                 _ => 0,
             };
         }
@@ -115,6 +119,8 @@ public class MainPresenter : IMainPresenter
                 PlayerListFilter.RecentPlayers => ServiceContext.PlayerCacheService.GetRecentPlayers(start, count),
                 PlayerListFilter.PlayersByCategory => ServiceContext.PlayerCacheService.GetCategoryPlayers(Config.FilterCategoryId, start, count),
                 PlayerListFilter.PlayersByTag => ServiceContext.PlayerCacheService.GetTagPlayers(Config.FilterTagId, start, count),
+                // Search-only mode shows nothing until a search term is entered.
+                PlayerListFilter.PlayerSearch => [],
                 _ => [],
             };
         }
@@ -126,6 +132,8 @@ public class MainPresenter : IMainPresenter
             PlayerListFilter.RecentPlayers => ServiceContext.PlayerCacheService.GetRecentPlayers(start, count, Config.SearchInput, Config.SearchType),
             PlayerListFilter.PlayersByCategory => ServiceContext.PlayerCacheService.GetCategoryPlayers(Config.FilterCategoryId, start, count, Config.SearchInput, Config.SearchType),
             PlayerListFilter.PlayersByTag => ServiceContext.PlayerCacheService.GetTagPlayers(Config.FilterTagId, start, count, Config.SearchInput, Config.SearchType),
+            // Search-only mode: search across ALL players.
+            PlayerListFilter.PlayerSearch => ServiceContext.PlayerCacheService.GetAllPlayers(start, count, Config.SearchInput, Config.SearchType),
             _ => [],
         };
     }

@@ -621,6 +621,9 @@
     <data name="PlayersByTag" xml:space="preserve">
         <value>Players by Tag</value>
     </data>
+    <data name="PlayerSearch" xml:space="preserve">
+        <value>Player Search</value>
+    </data>
     <data name="PreserveConfigState" xml:space="preserve">
         <value>Preserve Config Window State on Next Load</value>
     </data>

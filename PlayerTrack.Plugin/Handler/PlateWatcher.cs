@@ -5,9 +5,11 @@ using System.Text.RegularExpressions;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Chat;
+using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using PlayerTrack.Domain;
+using PlayerTrack.Extensions;
 
 namespace PlayerTrack.Handler;
 
@@ -334,6 +336,29 @@ public static class PlateWatcher
             var player = ServiceContext.PlayerDataService.GetPlayer(playerName, worldId);
             if (player != null)
                 PlayerBioService.UpdateBioIfChanged(player.Id, bio);
+
+            // Auto-scrape: also echo the scraped bio to the local Echo channel so
+            // the user can see what the scraper picked up.  Format mirrors the
+            // SimpleTweaks "Print Search Comment" output so PlateWatcher's chat
+            // handler (OnSearchCommentChatMessage) can also pick it up if desired.
+            // Manual lookups (user-opened CharaCards) do NOT echo.
+            if (BioScraper.IsAutoScrapeInProgress)
+            {
+                try
+                {
+                    var echoPayloads = new List<Payload>
+                    {
+                        new TextPayload("Search Info from "),
+                        new PlayerPayload(playerName, worldId),
+                        new TextPayload($" {bio}"),
+                    };
+                    Plugin.ChatGuiHandler.PluginPrintEcho(echoPayloads);
+                }
+                catch (Exception echoEx)
+                {
+                    Plugin.PluginLog.Warning(echoEx, "[PlateWatcher] Failed to echo auto-scrape bio.");
+                }
+            }
 
             if (config.CategorizerRules.Count == 0)
             {
