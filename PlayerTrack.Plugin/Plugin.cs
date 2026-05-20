@@ -36,6 +36,7 @@ public class Plugin : IDalamudPlugin
     [PluginService] public static IDataManager DataManager { get; set; } = null!;
     [PluginService] public static ITargetManager TargetManager { get; set; } = null!;
     [PluginService] public static IAddonLifecycle AddonLifecycle { get; set; } = null!;
+    [PluginService] public static IPartyList PartyList { get; set; } = null!;
 
     public static WindowManager WindowManager { get; set; } = null!;
 
@@ -76,6 +77,7 @@ public class Plugin : IDalamudPlugin
         try
         {
             PlayerTrackProvider?.Dispose();
+            PartyMonitor.Dispose();
             BioScraper.Dispose();
             PlateWatcher.Dispose();
             EncounterWatcher.Dispose();
@@ -160,6 +162,8 @@ public class Plugin : IDalamudPlugin
             PlateWatcher.Start();
             BioScraper.Start();
             EncounterWatcher.Start();
+            PartyMonitor.Start();
+            ServiceContext.BlacklistAlertService.Start();
             PlayerTrackProvider = new PlayerTrackProvider(PluginInterface, new PlayerTrackAPI());
         }
         catch (Exception ex)

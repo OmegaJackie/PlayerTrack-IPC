@@ -150,6 +150,21 @@ public static class GuiController
     private static void OnPlayerSelected(Player player)
     {
         Plugin.PluginLog.Verbose($"Entering GuiController.OnPlayerSelected(): {player.Id}");
+
+        // Reset the player-list filter so the selected player is never hidden
+        // by a category/tag/search filter that happened to be active when the
+        // window was last closed. Without this, "Open PlayerTrack" appears to
+        // do nothing even though the panel updates -- the list stays empty.
+        var filterChanged = Config.PlayerListFilter != PlayerListFilter.AllPlayers
+                            || !string.IsNullOrEmpty(Config.SearchInput);
+        if (filterChanged)
+        {
+            Config.PlayerListFilter = PlayerListFilter.AllPlayers;
+            Config.SearchInput = string.Empty;
+            ServiceContext.ConfigService.SaveConfig(Config);
+            Presenter.ClearCache();
+        }
+
         Presenter.SelectPlayer(player);
         Presenter.ShowPanel(PanelType.Player);
 

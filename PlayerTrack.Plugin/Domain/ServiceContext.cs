@@ -17,6 +17,7 @@ public static class ServiceContext
     public static PlayerChangeService PlayerChangeService { get; set; } = null!;
     public static PlayerEncounterService PlayerEncounterService { get; set; } = null!;
     public static PlayerAlertService PlayerAlertService { get; set; } = null!;
+    public static BlacklistAlertService BlacklistAlertService { get; set; } = null!;
     public static PlayerProcessService PlayerProcessService { get; set; } = null!;
     public static PlayerCacheService PlayerCacheService { get; set; } = null!;
     public static TagService TagService { get; set; } = null!;
@@ -41,6 +42,7 @@ public static class ServiceContext
         PlayerDataService = new PlayerDataService();
         PlayerEncounterService = new PlayerEncounterService();
         PlayerAlertService = new PlayerAlertService();
+        BlacklistAlertService = new BlacklistAlertService();
         PlayerProcessService = new PlayerProcessService();
         PlayerConfigService = new PlayerConfigService();
         LodestoneService = new LodestoneService();
@@ -60,6 +62,7 @@ public static class ServiceContext
             EncounterService.Dispose();
             VisibilityService.Dispose();
             PlayerAlertService.Dispose();
+            BlacklistAlertService.Dispose();
         }
         catch (Exception)
         {

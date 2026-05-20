@@ -26,6 +26,22 @@ public static class ChatGuiExtensions
         });
     }
 
+    /// <summary>
+    /// Print a message to the local Echo channel without the [PlayerTrack] prefix.
+    /// Used by the auto-scraper so its plate dumps are visible to the user and
+    /// can still be re-parsed by PlateWatcher's chat-message handler.
+    /// </summary>
+    public static void PluginPrintEcho(this IChatGui value, IEnumerable<Payload> payloads)
+    {
+        var builder = new SeStringBuilder();
+        builder.Append(payloads);
+        value.Print(new XivChatEntry
+        {
+            Message = builder.BuiltString,
+            Type = XivChatType.Echo,
+        });
+    }
+
     private static SeString BuildSeString(string? pluginName, IEnumerable<Payload> payloads)
     {
         var builder = new SeStringBuilder();

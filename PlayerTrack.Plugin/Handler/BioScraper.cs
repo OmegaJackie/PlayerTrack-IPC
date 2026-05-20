@@ -50,6 +50,13 @@ public static class BioScraper
     /// gate the CharaCard hide on the correct caller.</summary>
     private static volatile bool _isProcessing;
 
+    /// <summary>
+    /// True while BioScraper is the active caller of the currently-open
+    /// CharaCard.  PlateWatcher reads this to decide whether to echo the
+    /// scraped bio into chat (auto only -- manual lookups don't echo).
+    /// </summary>
+    public static bool IsAutoScrapeInProgress => _isProcessing;
+
     /// <summary>Timestamp (ms) of the last OpenCharaCard call.</summary>
     private static long _lastOpenedMs;
 

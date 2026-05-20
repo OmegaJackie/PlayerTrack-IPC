@@ -656,6 +656,10 @@ public class PlayerCacheService
             case PlayerListFilter.PlayersByTag:
                 PlayerTagCache.Resort(Comparer);
                 break;
+            case PlayerListFilter.PlayerSearch:
+                // Search-only mode reads from the All-Players cache.
+                PlayerCache.Resort(Comparer);
+                break;
             default:
                 Plugin.PluginLog.Warning($"Invalid player list filter: {filter}");
                 break;
