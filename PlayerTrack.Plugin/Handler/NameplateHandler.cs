@@ -62,12 +62,20 @@ public static class NameplateHandler
 
         var nameplate = PlayerNameplateService.GetPlayerNameplate(player, currentLocation.LocationType);
         Nameplates.AddOrUpdate(entityId, nameplate, (_, _) => nameplate);
+
+        // Force Dalamud to re-fire OnNamePlateUpdate on the next frame.  Without this
+        // a player who respawns into view (e.g. after stepping out of render distance
+        // and back) keeps the default game nameplate -- our handler ran once at spawn
+        // before this cache entry existed, and the game has no reason to refire the
+        // event since the text didn't change.
+        Plugin.NamePlateGuiHandler.RequestRedraw();
     }
 
     public static void RemoveNameplate(uint entityId)
     {
         Plugin.PluginLog.Verbose($"Entering NameplateHandler.RemoveNameplate(): {entityId}");
         Nameplates.TryRemove(entityId, out _);
+        Plugin.NamePlateGuiHandler.RequestRedraw();
     }
 
     public static void Dispose()
@@ -99,6 +107,8 @@ public static class NameplateHandler
                 var nameplate = PlayerNameplateService.GetPlayerNameplate(player, currentLocation.LocationType);
                 Nameplates.AddOrUpdate(cachedNameplate.Key, nameplate, (_, _) => nameplate);
             }
+
+            Plugin.NamePlateGuiHandler.RequestRedraw();
         });
 
     private static void UpdateNameplates(INamePlateUpdateContext namePlateUpdateContext, IReadOnlyList<INamePlateUpdateHandler> handlers)
