@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using PlayerTrack.Data;
 using PlayerTrack.Infrastructure;
 using PlayerTrack.Models;
 using System.Threading.Tasks;
@@ -8,6 +9,33 @@ namespace PlayerTrack.Domain;
 
 public class PlayerCategoryService
 {
+    /// <summary>
+    /// Assigns a category to a player identified only by context-menu target data,
+    /// creating the PlayerTrack record first if the player isn't tracked yet.
+    /// Used by the "Add to Category" context-menu submenu.
+    /// </summary>
+    public static void AddPlayerToCategory(PlayerData playerData, int categoryId) => Task.Run(() =>
+    {
+        Plugin.PluginLog.Verbose(
+            $"Entering PlayerCategoryService.AddPlayerToCategory(): {playerData.Name}@{playerData.HomeWorld}, categoryId: {categoryId}");
+
+        var player = ServiceContext.PlayerDataService.GetPlayer(playerData.ContentId, playerData.Name, playerData.HomeWorld);
+        if (player == null)
+        {
+            PlayerProcessService.CreateNewPlayer(playerData.Name, playerData.HomeWorld, playerData.ContentId, false);
+            player = ServiceContext.PlayerDataService.GetPlayer(playerData.ContentId, playerData.Name, playerData.HomeWorld);
+        }
+
+        if (player == null)
+        {
+            Plugin.PluginLog.Warning(
+                $"AddPlayerToCategory: unable to create or find player {playerData.Name}@{playerData.HomeWorld}");
+            return;
+        }
+
+        AssignCategoryToPlayerSync(player.Id, categoryId);
+    });
+
     public static void AssignCategoriesToPlayers(IEnumerable<Player> players, int[] categoryIds) => Task.Run(() =>
     {
         Plugin.PluginLog.Verbose("Entering PlayerCategoryService.AssignCategoriesToPlayers()");

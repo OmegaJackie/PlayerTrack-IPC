@@ -43,8 +43,18 @@ public class Plugin : IDalamudPlugin
     public static SocialListHandler SocialListHandler { get; set; } = null!;
     public static PlayerLocationManager PlayerLocationManager { get; set; } = null!;
 
+    /// <summary>
+    /// Set to true once <see cref="Dispose"/> has begun.  RunPostStartup is a
+    /// fire-and-forget task that can still be scheduled when Dalamud unloads
+    /// the plugin (e.g. profile state flip mid-startup); checking this flag
+    /// between steps prevents downstream services from touching the disposed
+    /// SQLiteConnection.
+    /// </summary>
+    private static volatile bool _isDisposing;
+
     public Plugin(IDalamudPluginInterface pluginInterface)
     {
+        _isDisposing = false;
         if (pluginInterface.IsDifferentVersionLoaded())
         {
             PluginLog.Error("Terminating plugin since another version of PlayerTrack is loaded.");
@@ -73,12 +83,14 @@ public class Plugin : IDalamudPlugin
     public void Dispose()
     {
         PluginLog.Verbose("Entering Plugin.Dispose()");
+        _isDisposing = true;
         GC.SuppressFinalize(this);
         try
         {
             PlayerTrackProvider?.Dispose();
             PartyMonitor.Dispose();
             BioScraper.Dispose();
+            HousingProvider.Dispose();
             PlateWatcher.Dispose();
             EncounterWatcher.Dispose();
             CommandHandler.Dispose();
@@ -141,16 +153,36 @@ public class Plugin : IDalamudPlugin
 
     private void RunPostStartup() => Task.Run(() =>
     {
+        // Helper: bail out cleanly if Dalamud started unloading us mid-startup.
+        // RunPostStartup is fire-and-forget, so a profile state flip (or any
+        // other reason Dalamud yanks the plugin) can dispose RepositoryContext
+        // while this task is still scheduled.  Checking between steps stops
+        // every downstream call from blowing up with ObjectDisposedException.
+        bool Aborted()
+        {
+            if (!_isDisposing) return false;
+            PluginLog.Information("[Plugin] RunPostStartup aborted -- Plugin.Dispose was called before initialization completed.");
+            return true;
+        }
+
         try
         {
             PluginLog.Verbose("Entering Plugin.RunPostStartup()");
+            if (Aborted()) return;
             EncounterService.EnsureNoOpenEncounters();
+            if (Aborted()) return;
             ServiceContext.LodestoneService.Start();
+            if (Aborted()) return;
             ServiceContext.ConfigService.SyncIcons();
+            if (Aborted()) return;
             ServiceContext.PlayerCacheService.LoadPlayers();
+            if (Aborted()) return;
             ServiceContext.VisibilityService.Initialize();
+            if (Aborted()) return;
             SetPluginVersion();
+            if (Aborted()) return;
             ServiceContext.BackupService.Startup();
+            if (Aborted()) return;
             GuiController.Start();
             ContextMenuHandler.Start();
             EventDispatcher.Start();
@@ -159,12 +191,21 @@ public class Plugin : IDalamudPlugin
             PlayerLocationManager.Start();
             SocialListHandler.Start();
             ServiceContext.PlayerProcessService.Start();
+            HousingProvider.Start();
             PlateWatcher.Start();
             BioScraper.Start();
             EncounterWatcher.Start();
             PartyMonitor.Start();
             ServiceContext.BlacklistAlertService.Start();
+            if (Aborted()) return;
             PlayerTrackProvider = new PlayerTrackProvider(PluginInterface, new PlayerTrackAPI());
+        }
+        catch (ObjectDisposedException ex) when (_isDisposing)
+        {
+            // Expected when Dalamud disposes mid-startup.  Demote from ERR to INF.
+            PluginLog.Information(
+                "[Plugin] RunPostStartup caught ObjectDisposedException during shutdown ({0}).  Suppressing.",
+                ex.ObjectName);
         }
         catch (Exception ex)
         {

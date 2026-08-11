@@ -75,12 +75,13 @@ public class VisibilityService
         });
     }
 
+    // Runs for every tracked player on every PlayerUpdated event, so only states that
+    // actually change a visibility list are logged -- anything unconditional here
+    // produces thousands of lines a minute in a populated zone.
     public void SyncWithVisibility(Player player)
     {
-        Plugin.PluginLog.Verbose($"Entering VisibilityService.SyncWithVisibility(): {player.Name}");
         if (!IsVisibilityAvailable)
         {
-            Plugin.PluginLog.Verbose("VisibilityService.SyncWithVisibility() - Visibility not available");
             Interlocked.Exchange(ref IsSyncing, 0);
             return;
         }
@@ -90,10 +91,7 @@ public class VisibilityService
         // avoid queuing dozens of callbacks simultaneously during zone transitions.
         var visibilityTypeFast = PlayerConfigService.GetVisibilityType(player);
         if (visibilityTypeFast == VisibilityType.None && !_trackedKeys.Contains(player.Key))
-        {
-            Plugin.PluginLog.Verbose($"VisibilityService.SyncWithVisibility() - {player.Name} - skipped (None, not tracked)");
             return;
-        }
 
         // Visibility IPC internally accesses ObjectTable which requires the framework thread.
         if (!Plugin.GameFramework.IsInFrameworkUpdateThread)
@@ -107,31 +105,39 @@ public class VisibilityService
             var voidedEntries = GetVisibilityPlayers(VisibilityType.Voidlist);
             var whitelistedEntries = GetVisibilityPlayers(VisibilityType.Whitelist);
             var visibilityType = PlayerConfigService.GetVisibilityType(player);
-            Plugin.PluginLog.Verbose($"VisibilityService.SyncWithVisibility() - {player.Name} - {visibilityType}");
 
             switch (visibilityType)
             {
                 case VisibilityType.None:
-                    Plugin.PluginLog.Verbose($"VisibilityService.SyncWithVisibility() - {player.Name} - {visibilityType} - Removing from visibility");
                     if (voidedEntries.ContainsKey(player.Key))
+                    {
+                        Plugin.PluginLog.Debug($"VisibilityService.SyncWithVisibility() - {player.Name} - removing from void list");
                         VisibilityConsumer.RemoveFromVoidList(player.Name, player.WorldId);
+                    }
 
                     if (whitelistedEntries.ContainsKey(player.Key))
+                    {
+                        Plugin.PluginLog.Debug($"VisibilityService.SyncWithVisibility() - {player.Name} - removing from white list");
                         VisibilityConsumer.RemoveFromWhiteList(player.Name, player.WorldId);
+                    }
 
                     _trackedKeys.Remove(player.Key);
                     break;
                 case VisibilityType.Voidlist:
-                    Plugin.PluginLog.Verbose($"VisibilityService.SyncWithVisibility() - {player.Name} - {visibilityType} - Adding to void list");
                     if (!voidedEntries.ContainsKey(player.Key))
+                    {
+                        Plugin.PluginLog.Debug($"VisibilityService.SyncWithVisibility() - {player.Name} - adding to void list");
                         VisibilityConsumer.AddToVoidList(player.Name, player.WorldId, Reason);
+                    }
 
                     _trackedKeys.Add(player.Key);
                     break;
                 case VisibilityType.Whitelist:
-                    Plugin.PluginLog.Verbose($"VisibilityService.SyncWithVisibility() - {player.Name} - {visibilityType} - Adding to white list");
                     if (!whitelistedEntries.ContainsKey(player.Key))
+                    {
+                        Plugin.PluginLog.Debug($"VisibilityService.SyncWithVisibility() - {player.Name} - adding to white list");
                         VisibilityConsumer.AddToWhiteList(player.Name, player.WorldId, Reason);
+                    }
 
                     _trackedKeys.Add(player.Key);
                     break;

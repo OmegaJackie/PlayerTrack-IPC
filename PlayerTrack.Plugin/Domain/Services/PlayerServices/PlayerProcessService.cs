@@ -143,25 +143,39 @@ public class PlayerProcessService
         OnPlayerSelected?.Invoke(player);
     }
 
+    // Runs once per player entering the object table. The "Adding/Removing current
+    // player" lines in ProcessCurrentPlayers are the signal for this path; the
+    // per-branch tracing below it was pure volume and has been removed.
     public void AddOrUpdatePlayer(PlayerData toadPlayer, bool isCurrent = true, bool isUserRequest = false)
     {
-        Plugin.PluginLog.Verbose($"Entering PlayerProcessService.AddOrUpdatePlayer(): {toadPlayer.ContentId}, {toadPlayer.Name}, {toadPlayer.HomeWorld}, {isUserRequest}");
         var enc = ServiceContext.EncounterService.GetCurrentEncounter();
         var player = ServiceContext.PlayerDataService.GetPlayer(toadPlayer.ContentId, toadPlayer.Name, toadPlayer.HomeWorld);
 
         if (enc == null)
         {
             HandleContentIdUpdateOnly(player, toadPlayer);
-            Plugin.PluginLog.Verbose("Encounter is missing.");
 
             // Context menu / user request: always open the panel regardless of encounter state.
-            if (isUserRequest && player != null)
+            if (isUserRequest)
             {
-                OnPlayerSelected?.Invoke(player);
+                // The target may not be tracked yet (e.g. right-clicked from chat and
+                // never encountered). With no active encounter the normal create path
+                // further below is skipped, so create the record here -- otherwise
+                // "Open PlayerTrack" silently does nothing for untracked players.
+                if (player == null)
+                {
+                    Plugin.PluginLog.Verbose("Player not found and no active encounter; creating for user request.");
+                    var key = PlayerKeyBuilder.Build(toadPlayer.Name, toadPlayer.HomeWorld);
+                    CreateNewPlayer(toadPlayer, key, isCurrent, 0, PlayerEncounterService.GetEncounterLocation());
+                    player = ServiceContext.PlayerDataService.GetPlayer(toadPlayer.ContentId, toadPlayer.Name, toadPlayer.HomeWorld);
+                }
+
+                if (player != null)
+                    OnPlayerSelected?.Invoke(player);
             }
             // Bio scraper: notify for known players entering the zone even without an encounter,
             // so bios can be collected independently of encounter tracking.
-            else if (isCurrent && !isUserRequest && player != null)
+            else if (isCurrent && player != null)
             {
                 player.EntityId = toadPlayer.EntityId; // EntityId is session-specific; keep it current.
                 OnCurrentPlayerAdded?.Invoke(player);
@@ -172,7 +186,6 @@ public class PlayerProcessService
         if (!enc.SavePlayers && !isUserRequest)
         {
             HandleContentIdUpdateOnly(player, toadPlayer);
-            Plugin.PluginLog.Verbose("Encounter is not set to save players.");
 
             // Bio scraper: notify for known players even when the encounter does not save players.
             if (isCurrent && player != null)
@@ -186,7 +199,6 @@ public class PlayerProcessService
         var loc = PlayerEncounterService.GetEncounterLocation();
         if (player == null)
         {
-            Plugin.PluginLog.Verbose("Player not found, creating new player.");
             var key = PlayerKeyBuilder.Build(toadPlayer.Name, toadPlayer.HomeWorld);
             CreateNewPlayer(toadPlayer, key, isCurrent, enc.CategoryId, loc);
             player = ServiceContext.PlayerDataService.GetPlayer(toadPlayer.ContentId, toadPlayer.Name, toadPlayer.HomeWorld);
@@ -200,13 +212,12 @@ public class PlayerProcessService
         }
         else if (isUserRequest)
         {
-            Plugin.PluginLog.Verbose("Force load player, used for player search.");
+            // Force load player, used for player search.
             player = UpdateExistingPlayer(player, toadPlayer, isCurrent, loc);
             OnPlayerSelected?.Invoke(player);
         }
         else if (!player.IsCurrent)
         {
-            Plugin.PluginLog.Verbose("Player found, updating existing player.");
             player = UpdateExistingPlayer(player, toadPlayer, isCurrent, loc);
             ServiceContext.PlayerAlertService.SendProximityAlert(player);
             if (enc.SaveEncounter)

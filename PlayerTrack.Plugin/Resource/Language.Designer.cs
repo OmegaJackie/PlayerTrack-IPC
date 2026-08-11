@@ -1759,6 +1759,15 @@ namespace PlayerTrack.Resource {
                 return ResourceManager.GetString("OpenLodestone", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Add to Category.
+        /// </summary>
+        internal static string AddToCategory {
+            get {
+                return ResourceManager.GetString("AddToCategory", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Open Player.
@@ -2378,6 +2387,15 @@ namespace PlayerTrack.Resource {
         internal static string ShowOpenLodestone {
             get {
                 return ResourceManager.GetString("ShowOpenLodestone", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show Add to Category.
+        /// </summary>
+        internal static string ShowAddToCategory {
+            get {
+                return ResourceManager.GetString("ShowAddToCategory", resourceCulture);
             }
         }
         

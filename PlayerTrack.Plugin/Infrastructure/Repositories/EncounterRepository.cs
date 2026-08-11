@@ -85,6 +85,10 @@ public class EncounterRepository : BaseRepository
                                 UPDATE encounters
                                 SET
                                     territory_type_id = @territory_type_id,
+                                    housing_ward = @housing_ward,
+                                    housing_plot = @housing_plot,
+                                    housing_room = @housing_room,
+                                    housing_division = @housing_division,
                                     ended = @ended,
                                     updated = @updated
                                 WHERE id = @id";
@@ -130,6 +134,10 @@ public class EncounterRepository : BaseRepository
             created,
             updated,
             territory_type_id,
+            housing_ward,
+            housing_plot,
+            housing_room,
+            housing_division,
             ended
         )
         VALUES
@@ -137,6 +145,10 @@ public class EncounterRepository : BaseRepository
             @created,
             @updated,
             @territory_type_id,
+            @housing_ward,
+            @housing_plot,
+            @housing_room,
+            @housing_division,
             @ended
         ) RETURNING id";
             var newId = Connection.ExecuteScalar<int>(insertSql, encounterDTO);
@@ -161,6 +173,10 @@ public class EncounterRepository : BaseRepository
                     created,
                     updated,
                     territory_type_id,
+                    housing_ward,
+                    housing_plot,
+                    housing_room,
+                    housing_division,
                     ended
                 )
                 VALUES
@@ -168,6 +184,10 @@ public class EncounterRepository : BaseRepository
                     @created,
                     @updated,
                     @territory_type_id,
+                    @housing_ward,
+                    @housing_plot,
+                    @housing_room,
+                    @housing_division,
                     @ended
                 )";
 

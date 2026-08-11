@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.Chat;
+using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -108,6 +110,16 @@ public static class PlateWatcher
     {
         try
         {
+            // Channel guard: a "Search Info from" plate line only ever arrives on two
+            // channels, so ignore everything else (the battle log Damage..LoseDebuff
+            // block and all system channels) without scanning a single payload:
+            //   Echo  -- PlayerTrack's own auto-scrape echo (ChatGuiExtensions.PluginPrintEcho).
+            //   Debug -- Dalamud's default general channel, where SimpleTweaks
+            //            "Print Search Comment" prints.  IChatGui.Print routes to
+            //            DalamudConfiguration.GeneralChatType, which defaults to Debug.
+            if (chatMessage.LogKind is not (XivChatType.Echo or XivChatType.Debug))
+                return;
+
             var config = ServiceContext.ConfigService.GetConfig();
 
             // Diagnostic: dump every payload so the real layout can be confirmed.
@@ -191,13 +203,13 @@ public static class PlateWatcher
             bool anyEnabled = false;
             foreach (var rule in config.CategorizerRules)
             {
-                if (!rule.Enabled || string.IsNullOrEmpty(rule.Keyword)) continue;
+                if (!rule.Enabled || !RuleHasInput(rule)) continue;
                 anyEnabled = true;
 
                 if (!Matches(bio, rule)) continue;
 
                 Plugin.PluginLog.Information(
-                    $"[PlateWatcher/Chat] Rule matched: keyword=\"{rule.Keyword}\" " +
+                    $"[PlateWatcher/Chat] Rule matched: keyword=\"{RuleDisplay(rule)}\" " +
                     $"mode={rule.MatchMode} wholeWord={rule.WholeWord} " +
                     $"categoryId={rule.CategoryId} player=\"{playerName}\"@worldId={worldId}");
 
@@ -369,13 +381,13 @@ public static class PlateWatcher
             bool anyEnabled = false;
             foreach (var rule in config.CategorizerRules)
             {
-                if (!rule.Enabled || string.IsNullOrEmpty(rule.Keyword)) continue;
+                if (!rule.Enabled || !RuleHasInput(rule)) continue;
                 anyEnabled = true;
 
                 if (!Matches(bio, rule)) continue;
 
                 Plugin.PluginLog.Information(
-                    $"[PlateWatcher] Rule matched: keyword=\"{rule.Keyword}\" " +
+                    $"[PlateWatcher] Rule matched: keyword=\"{RuleDisplay(rule)}\" " +
                     $"mode={rule.MatchMode} wholeWord={rule.WholeWord} " +
                     $"categoryId={rule.CategoryId} player=\"{playerName}\"@worldId={worldId}");
 
@@ -468,36 +480,145 @@ public static class PlateWatcher
     }
 
     // ----------------------------------------------------------------
+    // Bulk recategorize -- replays Categorizer rules over every player's
+    // most-recent stored bio.  Called from the Categorizer config tab when
+    // the user adds new rules and wants to backfill existing players.
+    // ----------------------------------------------------------------
+
+    public static void RecategorizeAllFromStoredBios() => System.Threading.Tasks.Task.Run(() =>
+    {
+        try
+        {
+            var config = ServiceContext.ConfigService.GetConfig();
+            var rules = new List<Models.CategoryRule>();
+            foreach (var r in config.CategorizerRules)
+                if (r.Enabled && RuleHasInput(r))
+                    rules.Add(r);
+
+            if (rules.Count == 0)
+            {
+                Plugin.PluginLog.Information("[Recategorize] No enabled rules with valid input.  Nothing to do.");
+                return;
+            }
+
+            var players = ServiceContext.PlayerDataService.GetAllPlayers().ToList();
+            int withBio = 0, matched = 0;
+
+            foreach (var player in players)
+            {
+                var history = Domain.PlayerBioService.GetBioHistory(player.Id);
+                if (history == null || history.Count == 0) continue;
+
+                var latest = history[0].Bio;
+                if (string.IsNullOrWhiteSpace(latest)) continue;
+                withBio++;
+
+                foreach (var rule in rules)
+                {
+                    if (!Matches(latest, rule)) continue;
+
+                    Domain.PlayerCategoryService.AssignCategoryToPlayerSync(player.Id, (int)rule.CategoryId);
+                    Plugin.PluginLog.Information(
+                        $"[Recategorize] {player.Name}: keyword=\"{RuleDisplay(rule)}\" " +
+                        $"mode={rule.MatchMode} -> categoryId={rule.CategoryId}");
+                    matched++;
+                    break; // first matching rule wins, same as live path
+                }
+            }
+
+            Plugin.PluginLog.Information(
+                $"[Recategorize] Done.  Players with stored bio: {withBio}, " +
+                $"categories assigned: {matched}.");
+        }
+        catch (Exception ex)
+        {
+            Plugin.PluginLog.Error(ex, "[Recategorize] Failed during bulk recategorization.");
+        }
+    });
+
+    // ----------------------------------------------------------------
     // Keyword matching
     // ----------------------------------------------------------------
+
+    /// <summary>Returns true when the rule has the input field its mode requires.</summary>
+    private static bool RuleHasInput(Models.CategoryRule rule) =>
+        rule.MatchMode == Models.RuleMatchMode.Shorthand
+            ? !string.IsNullOrWhiteSpace(rule.PrimaryToken)
+            : !string.IsNullOrWhiteSpace(rule.Keyword);
+
+    /// <summary>Returns the user-visible match text for a rule (Keyword for non-Shorthand,
+    /// "Primary lf Secondary" for Shorthand).  Used only in log messages.</summary>
+    private static string RuleDisplay(Models.CategoryRule rule) =>
+        rule.MatchMode == Models.RuleMatchMode.Shorthand
+            ? string.IsNullOrWhiteSpace(rule.SecondaryToken)
+                ? rule.PrimaryToken
+                : $"{rule.PrimaryToken} lf {rule.SecondaryToken}"
+            : rule.Keyword;
 
     private static bool Matches(string bio, Models.CategoryRule rule)
     {
         switch (rule.MatchMode)
         {
             case Models.RuleMatchMode.Regex:
-                return MatchesRegex(bio, rule);
+                return MatchesRegex(NormalizeText(bio), rule);
             case Models.RuleMatchMode.Shorthand:
-                return MatchesShorthand(bio, rule);
+                return MatchesShorthand(NormalizeText(bio), rule);
         }
+
+        // Normalize both sides so stylised unicode (fullwidth letters, zero-width
+        // characters, exotic spaces) can't dodge a plain-ASCII keyword.
+        var haystack = NormalizeText(bio);
+        var keyword  = NormalizeText(rule.Keyword).Trim();
+        if (keyword.Length == 0) return false;
+
+        var opts = rule.CaseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
+
+        // Multi-word keywords tolerate any run of whitespace/punctuation between the
+        // words, so "looking for" also matches "looking  for", "looking-for", "looking.for".
+        var words = Regex.Split(keyword, @"\s+");
+        var core = words.Length > 1
+            ? string.Join(@"[\s\p{P}\p{S}]+", words.Select(Regex.Escape))
+            : Regex.Escape(keyword);
 
         // Single-character keywords in Substring mode are automatically treated as
         // whole-word tokens. A bare substring search for "F" would match any bio
         // containing that letter (e.g. "ILCBICEIBTIGFBISG"), which is never useful.
-        var effectiveWholeWord = rule.WholeWord || rule.Keyword.Length == 1;
+        var effectiveWholeWord = rule.WholeWord || keyword.Length == 1;
         if (effectiveWholeWord)
         {
-            var opts = rule.CaseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase;
             // \b doesn't work for tokens ending in non-word chars like "F+", so use
             // explicit shorthand-token boundaries that treat '+' as part of the token.
-            var pattern = @"(?<![A-Za-z0-9+])" + Regex.Escape(rule.Keyword) + @"(?![A-Za-z0-9+])";
-            return Regex.IsMatch(bio, pattern, opts);
+            return Regex.IsMatch(haystack, @"(?<![A-Za-z0-9+])" + core + @"(?![A-Za-z0-9+])", opts);
         }
+
+        if (words.Length > 1)
+            return Regex.IsMatch(haystack, core, opts);
 
         var cmp = rule.CaseSensitive
             ? StringComparison.Ordinal
             : StringComparison.OrdinalIgnoreCase;
-        return bio.Contains(rule.Keyword, cmp);
+        return haystack.Contains(keyword, cmp);
+    }
+
+    /// <summary>
+    /// Folds text into a canonical matching form: NFKC-normalizes so stylised and
+    /// fullwidth unicode collapse to plain characters (ＬＦ -> LF, ４ -> 4), strips
+    /// zero-width/soft-hyphen characters, and folds all whitespace to ' '.
+    /// </summary>
+    private static string NormalizeText(string raw)
+    {
+        if (string.IsNullOrEmpty(raw)) return string.Empty;
+
+        var normalized = raw.Normalize(NormalizationForm.FormKC);
+        var sb = new StringBuilder(normalized.Length);
+        foreach (var ch in normalized)
+        {
+            // Zero-width space/joiners, BOM, and soft hyphen.
+            if (ch is (char)0x200B or (char)0x200C or (char)0x200D or (char)0xFEFF or (char)0x00AD) continue;
+            sb.Append(char.IsWhiteSpace(ch) ? ' ' : ch);
+        }
+
+        return sb.ToString();
     }
 
     private static bool MatchesRegex(string bio, Models.CategoryRule rule)
@@ -516,8 +637,10 @@ public static class PlateWatcher
     }
 
     /// <summary>
-    /// Shorthand-token matcher. Splits the bio on " lf " into primary / secondary
-    /// segments, tokenizes each on '/', and tests rule.PrimaryToken (and optionally
+    /// Shorthand-token matcher. Tries every plausible way of splitting the bio into
+    /// primary / secondary segments (spaced separators like " lf " / " looking for ",
+    /// compact "M4F"-style, and finally the whole bio as the primary segment),
+    /// tokenizes each side, and tests rule.PrimaryToken (and optionally
     /// rule.SecondaryToken) against the parsed tokens using a satisfier set derived
     /// from the full rule list. Base tokens (e.g. "F") are satisfied by themselves
     /// OR their "+" extended form ("F+") when that extended form exists in any rule;
@@ -526,41 +649,84 @@ public static class PlateWatcher
     private static bool MatchesShorthand(string bio, Models.CategoryRule rule)
     {
         if (string.IsNullOrWhiteSpace(rule.PrimaryToken)) return false;
-        if (!TrySplitLf(bio, out var leftRaw, out var rightRaw)) return false;
-
-        var leftTokens  = TokenizeShorthand(leftRaw);
-        var rightTokens = TokenizeShorthand(rightRaw);
+        if (string.IsNullOrWhiteSpace(bio)) return false;
 
         var tokenUniverse = BuildTokenUniverse();
         var satisfiers    = BuildSatisfiers(tokenUniverse);
 
-        if (!IsSatisfiedIn(rule.PrimaryToken, leftTokens, satisfiers)) return false;
+        foreach (var (leftRaw, rightRaw) in EnumerateSplitCandidates(bio))
+        {
+            if (!IsSatisfiedIn(rule.PrimaryToken, TokenizeShorthand(leftRaw), satisfiers))
+                continue;
 
-        if (!string.IsNullOrWhiteSpace(rule.SecondaryToken) &&
-            !IsSatisfiedIn(rule.SecondaryToken, rightTokens, satisfiers))
-            return false;
+            if (!string.IsNullOrWhiteSpace(rule.SecondaryToken) &&
+                !IsSatisfiedIn(rule.SecondaryToken, TokenizeShorthand(rightRaw), satisfiers))
+                continue;
 
-        return true;
+            return true;
+        }
+
+        return false;
     }
 
-    private static bool TrySplitLf(string input, out string left, out string right)
+    /// <summary>
+    /// Spaced primary/secondary separator, delimited by whitespace, punctuation, or
+    /// string boundaries on both sides. Accepted phrasings (case-insensitive):
+    /// "lf" / "lf4", "looking for" / "lookin 4" / "lookn for", "lkn for",
+    /// "seeking" / "seeks" / "seek", "searching for" / "searchin for",
+    /// "want" / "wants" / "wanting" / "wanted", "interested in", plain "for" and
+    /// standalone "4". Trailing punctuation ("lf:", "lf>") is handled by the
+    /// boundary classes plus token trimming.
+    /// </summary>
+    private static readonly Regex ShorthandSeparatorRegex = new(
+        @"(?<![^\s\p{P}\p{S}])" +
+        @"(?:looki?n[g']?\s+(?:for|4)|lkn\s+(?:for|4)|lf4?|seek(?:ing|s)?|search(?:ing|in')?\s+(?:for|4)|want(?:ing|s|ed)?|interested\s+in|for|4)" +
+        @"(?![^\s\p{P}\p{S}])",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    /// <summary>Compact "M4F"-style separator: a lone '4' wedged directly between letters.</summary>
+    private static readonly Regex Embedded4Regex = new(
+        @"(?<=[A-Za-z+])4(?=[A-Za-z])",
+        RegexOptions.Compiled);
+
+    /// <summary>
+    /// Yields every plausible (primary, secondary) split of the bio, most explicit
+    /// first: a spaced separator ("F lf M"), a compact one ("F4M"), and finally the
+    /// whole bio as the primary segment so primary-only rules still match bios that
+    /// carry tokens without any "lf" phrasing (e.g. a bio that is just "F+").
+    /// </summary>
+    private static IEnumerable<(string Left, string Right)> EnumerateSplitCandidates(string bio)
     {
-        left = right = string.Empty;
-        if (string.IsNullOrEmpty(input)) return false;
-        // Accepted separators (case-insensitive): " lf " and " for ".
-        var match = Regex.Match(input, @"\s+(?:lf|for)\s+", RegexOptions.IgnoreCase);
-        if (!match.Success) return false;
-        left  = input[..match.Index];
-        right = input[(match.Index + match.Length)..];
-        return true;
+        var spaced = ShorthandSeparatorRegex.Match(bio);
+        if (spaced.Success)
+            yield return (bio[..spaced.Index], bio[(spaced.Index + spaced.Length)..]);
+
+        var compact = Embedded4Regex.Match(bio);
+        if (compact.Success)
+            yield return (bio[..compact.Index], bio[(compact.Index + 1)..]);
+
+        yield return (bio, string.Empty);
     }
+
+    /// <summary>Separators between tokens inside one shorthand segment.</summary>
+    private static readonly char[] TokenSeparators = { '/', '\\', '|', ',', ';', '&', '·', '•', '~', ' ' };
+
+    /// <summary>
+    /// Punctuation stripped from the ends of a parsed token. '+' is deliberately
+    /// NOT trimmed: it is part of extended tokens like "F+".
+    /// </summary>
+    private static readonly char[] TokenTrimChars = { '(', ')', '[', ']', '{', '}', '<', '>', '"', '\'', '.', '!', '?', ':', '*', '-', '_', '=' };
 
     private static HashSet<string> TokenizeShorthand(string segment)
     {
         var tokens = new HashSet<string>(StringComparer.Ordinal);
         if (string.IsNullOrWhiteSpace(segment)) return tokens;
-        foreach (var raw in segment.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            tokens.Add(raw.ToUpperInvariant());
+        foreach (var raw in segment.Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var token = raw.Trim(TokenTrimChars);
+            if (token.Length == 0) continue;
+            tokens.Add(token.ToUpperInvariant());
+        }
         return tokens;
     }
 

@@ -25,5 +25,12 @@ public class ContextMenuComponent : ConfigViewComponent
             Config.ShowOpenLodestone = showOpenInLodestone;
             ServiceContext.ConfigService.SaveConfig(Config);
         }
+
+        var showAddToCategory = Config.ShowAddToCategory;
+        if (Helper.Checkbox(Language.ShowAddToCategory, ref showAddToCategory))
+        {
+            Config.ShowAddToCategory = showAddToCategory;
+            ServiceContext.ConfigService.SaveConfig(Config);
+        }
     }
 }

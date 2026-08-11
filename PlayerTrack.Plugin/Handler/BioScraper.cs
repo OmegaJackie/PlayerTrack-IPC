@@ -113,13 +113,10 @@ public static class BioScraper
             {
                 var ageMs   = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - latest.Created;
                 var staleMs = (long)config.AutoScrapeStaleAfterDays * 86_400_000L;
+                // Fires for every known player entering the zone, so it stays silent --
+                // a fresh bio is the expected steady state, not something to report.
                 if (ageMs < staleMs)
-                {
-                    Plugin.PluginLog.Verbose(
-                        $"[BioScraper] Skipping player id={player.Id} -- bio is fresh " +
-                        $"({ageMs / 86_400_000.0:F1} days old, threshold={config.AutoScrapeStaleAfterDays}d).");
                     return;
-                }
             }
 
             Queue.Enqueue((player.Id, player.EntityId));

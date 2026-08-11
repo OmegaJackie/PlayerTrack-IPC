@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using PlayerTrack.Data;
 using PlayerTrack.Infrastructure;
 using PlayerTrack.Models;
@@ -82,6 +83,28 @@ public class EncounterService
         CurrentEncounter.CategoryId = CategoryService.GetDefaultCategory(loc);
         CurrentEncounter.SaveEncounter = ShouldSaveEncounter(loc);
         CurrentEncounter.SavePlayers = ShouldSavePlayers(loc);
+    }
+
+    /// <summary>
+    /// Records the housing location (ward / plot / apartment) onto the open encounter.
+    /// Housing data loads asynchronously after a territory change, so this is called
+    /// repeatedly from the framework tick (<see cref="Handler.HousingProvider" />) and
+    /// captures the value once, the first time it becomes available for the encounter.
+    /// </summary>
+    /// <param name="housing">the current housing location read from the game.</param>
+    public void SyncCurrentEncounterHousing(HousingData housing)
+    {
+        // Capture a local reference: the encounter can be ended on another thread.
+        var enc = CurrentEncounter;
+        if (enc == null || enc.HousingWard != 0 || !housing.HasHousing)
+            return;
+
+        enc.HousingWard = housing.Ward;
+        enc.HousingPlot = housing.Plot;
+        enc.HousingRoom = housing.Room;
+        enc.HousingDivision = housing.Division;
+        Plugin.PluginLog.Verbose($"Captured housing for encounter {enc.Id}: {housing.Format()}");
+        Task.Run(() => UpdateEncounter(enc));
     }
 
     public void EndCurrentEncounter()
