@@ -76,9 +76,10 @@ public class PlayerEncounterRepository : BaseRepository
         }
     }
 
+    // UpdatePlayerEncounter/CreatePlayerEncounter/GetByPlayerIdAndEncId run once per
+    // player entering or leaving the object table -- keep them silent.
     public bool UpdatePlayerEncounter(PlayerEncounter playerEncounter)
     {
-        Plugin.PluginLog.Verbose($"Entering PlayerEncounterRepository.UpdatePlayerEncounter(): {playerEncounter.Id}");
         try
         {
             var playerEncounterDTO = Mapper.Map<PlayerEncounterDTO>(playerEncounter);
@@ -105,7 +106,6 @@ public class PlayerEncounterRepository : BaseRepository
 
     public int CreatePlayerEncounter(PlayerEncounter playerEncounter)
     {
-        Plugin.PluginLog.Verbose($"Entering PlayerEncounterRepository.CreatePlayerEncounter(): {playerEncounter.Id}");
         var playerEncounterDTO = Mapper.Map<PlayerEncounterDTO>(playerEncounter);
         SetCreateTimestamp(playerEncounterDTO);
         const string sql = @"
@@ -120,7 +120,6 @@ public class PlayerEncounterRepository : BaseRepository
 
     public PlayerEncounter? GetByPlayerIdAndEncId(int playerId, int encounterId)
     {
-        Plugin.PluginLog.Verbose($"Entering PlayerEncounterRepository.GetByPlayerIdAndEncId(): {playerId}, {encounterId}");
         try
         {
             const string sql = "SELECT * FROM player_encounters WHERE player_id = @player_id AND encounter_id = @encounter_id LIMIT 1";

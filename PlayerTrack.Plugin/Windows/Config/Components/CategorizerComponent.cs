@@ -34,6 +34,14 @@ public class CategorizerComponent : ConfigViewComponent
     // UI-level mode names (combine MatchMode + WholeWord for ergonomics).
     private static readonly string[] ModeNames = { "Substring", "Whole Word", "Regex", "Shorthand" };
 
+    // Tooltip describing every separator phrase the Shorthand matcher accepts.
+    private const string SeparatorTooltip =
+        "Matches any common separator between the two sides:\n" +
+        "\"lf\", \"lf4\", \"looking for\", \"lookin 4\", \"seeking\", \"searching for\",\n" +
+        "\"want(s)\", \"interested in\", plain \"for\" / \"4\", and compact forms like \"M4F\".\n" +
+        "A rule with only a Primary token also matches bios that carry the token\n" +
+        "with no separator at all.";
+
     private static int RuleToModeIndex(CategoryRule rule) => rule.MatchMode switch
     {
         RuleMatchMode.Regex     => 2,
@@ -113,10 +121,27 @@ public class CategorizerComponent : ConfigViewComponent
         var categoryNames = categories.Select(c => c.Name).ToArray();
 
         DrawDebugToggle();
+        ImGui.SameLine();
+        DrawReprocessButton();
         ImGuiHelpers.ScaledDummy(6f);
         DrawBioRuleTable(categories, categoryNames);
         ImGuiHelpers.ScaledDummy(6f);
         DrawBioAddRow(categories, categoryNames);
+    }
+
+    private void DrawReprocessButton()
+    {
+        // Re-run every rule against every player's latest stored bio.  Useful
+        // after adding/editing rules to backfill categories on existing players
+        // without needing to re-encounter them in-game.
+        if (ImGui.Button("Reprocess stored bios"))
+            Handler.PlateWatcher.RecategorizeAllFromStoredBios();
+
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(
+                "Iterates every player's most-recent stored bio and applies any matching\n" +
+                "enabled rule (first match wins, same as live evaluation).  Results are\n" +
+                "written to /xllog.  Runs asynchronously; large databases may take a moment.");
     }
 
     private void DrawDebugToggle()
@@ -193,6 +218,7 @@ public class CategorizerComponent : ConfigViewComponent
                 }
                 ImGui.SameLine();
                 ImGui.TextUnformatted("lf");
+                if (ImGui.IsItemHovered()) ImGui.SetTooltip(SeparatorTooltip);
                 ImGui.SameLine();
                 var sec = rule.SecondaryToken;
                 ImGui.SetNextItemWidth(halfWidth);
@@ -255,7 +281,15 @@ public class CategorizerComponent : ConfigViewComponent
 
         ImGui.SetNextItemWidth(110f * ImGuiHelpers.GlobalScale);
         ImGui.Combo("###NewMode", ref _newModeIndex, ModeNames, ModeNames.Length);
-        if (ImGui.IsItemHovered()) ImGui.SetTooltip("Match mode");
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(
+                "Match mode:\n" +
+                "Substring - keyword anywhere in the bio (multi-word keywords tolerate\n" +
+                "  any spacing/punctuation between words; stylised unicode is folded).\n" +
+                "Whole Word - keyword delimited by non-token characters.\n" +
+                "Regex - .NET regular expression.\n" +
+                "Shorthand - token match across an \"lf\"-style separator (hover the\n" +
+                "  \"lf\" label for accepted separators).");
 
         ImGui.SameLine();
         if (_newModeIndex == 3) // Shorthand
@@ -264,6 +298,7 @@ public class CategorizerComponent : ConfigViewComponent
             ImGui.InputTextWithHint("###NewPrim", "Primary", ref _newPrimaryToken, 32);
             ImGui.SameLine();
             ImGui.TextUnformatted("lf");
+            if (ImGui.IsItemHovered()) ImGui.SetTooltip(SeparatorTooltip);
             ImGui.SameLine();
             ImGui.SetNextItemWidth(90f * ImGuiHelpers.GlobalScale);
             ImGui.InputTextWithHint("###NewSec", "Secondary", ref _newSecondaryToken, 32);

@@ -66,9 +66,10 @@ public class PlayerDataService
         ServiceContext.PlayerCacheService.RemovePlayer(playerId);
     }
 
+    // UpdatePlayer runs for every nearby player on every zone/seen-count change and
+    // fans out to the nameplate and visibility handlers -- keep it silent.
     public void UpdatePlayer(Player player)
     {
-        Plugin.PluginLog.Verbose($"PlayerDataService.UpdatePlayer(): {player.Id}");
         ServiceContext.PlayerCacheService.UpdatePlayer(player);
         RepositoryContext.PlayerRepository.UpdatePlayer(player);
         PlayerUpdated?.Invoke(player);
@@ -76,14 +77,11 @@ public class PlayerDataService
 
     public void AddPlayer(Player player)
     {
-        Plugin.PluginLog.Verbose($"PlayerDataService.AddPlayer(): {player.Id}");
         player.Id = RepositoryContext.PlayerRepository.CreatePlayer(player, player.ContentId);
         player.PlayerConfig.PlayerId = player.Id;
         ServiceContext.PlayerCacheService.AddPlayer(player);
         if (player.PrimaryCategoryId != 0)
             PlayerCategoryService.AssignCategoryToPlayer(player.Id, player.PrimaryCategoryId);
-        else
-            Plugin.PluginLog.Verbose($"PlayerDataService.AddPlayer(): No category assigned to player: {player.Id}");
     }
 
     public void ClearCategoryFromPlayers(int categoryId)

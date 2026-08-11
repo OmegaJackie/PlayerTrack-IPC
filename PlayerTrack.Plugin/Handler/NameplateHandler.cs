@@ -50,25 +50,20 @@ public static class NameplateHandler
             return FriendContentIds.Contains(contentId);
     }
 
+    // UpdateNameplate/RemoveNameplate fire for every tracked player on every player
+    // update, so they must stay silent -- see PlayerNameplateService for the
+    // change-only diagnostics that explain each nameplate outcome.
     public static void UpdateNameplate(uint entityId, Player player)
     {
-        Plugin.PluginLog.Verbose($"Entering NameplateHandler.UpdateNameplate(): {entityId}");
         var currentLocation = Plugin.PlayerLocationManager.GetCurrentLocation();
         if (currentLocation == null)
-        {
-            Plugin.PluginLog.Verbose("Failed to get current location.");
             return;
-        }
 
         var nameplate = PlayerNameplateService.GetPlayerNameplate(player, currentLocation.LocationType);
         Nameplates.AddOrUpdate(entityId, nameplate, (_, _) => nameplate);
     }
 
-    public static void RemoveNameplate(uint entityId)
-    {
-        Plugin.PluginLog.Verbose($"Entering NameplateHandler.RemoveNameplate(): {entityId}");
-        Nameplates.TryRemove(entityId, out _);
-    }
+    public static void RemoveNameplate(uint entityId) => Nameplates.TryRemove(entityId, out _);
 
     public static void Dispose()
     {
@@ -80,6 +75,10 @@ public static class NameplateHandler
         Task.Run(() =>
         {
             Plugin.PluginLog.Debug("Entering NameplateHandler.RefreshNameplates()");
+
+            // Settings may have changed, so let every nameplate re-report its outcome once.
+            PlayerNameplateService.ResetOutcomeLog();
+
             var currentLocation = Plugin.PlayerLocationManager.GetCurrentLocation();
             if (currentLocation == null)
             {
@@ -91,10 +90,7 @@ public static class NameplateHandler
             {
                 var player = ServiceContext.PlayerDataService.GetPlayer(cachedNameplate.Key);
                 if (player == null)
-                {
-                    Plugin.PluginLog.Verbose($"Failed to get player for {cachedNameplate.Key}.");
                     continue;
-                }
 
                 var nameplate = PlayerNameplateService.GetPlayerNameplate(player, currentLocation.LocationType);
                 Nameplates.AddOrUpdate(cachedNameplate.Key, nameplate, (_, _) => nameplate);

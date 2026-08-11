@@ -564,6 +564,9 @@
     <data name="OpenLodestone" xml:space="preserve">
         <value>Open Lodestone</value>
     </data>
+    <data name="AddToCategory" xml:space="preserve">
+        <value>Add to Category</value>
+    </data>
     <data name="OpenPlayer" xml:space="preserve">
         <value>Open Player</value>
     </data>
@@ -776,6 +779,9 @@
     </data>
     <data name="ShowOpenLodestone" xml:space="preserve">
         <value>Show Open Lodestone</value>
+    </data>
+    <data name="ShowAddToCategory" xml:space="preserve">
+        <value>Show Add to Category</value>
     </data>
     <data name="ShowOpenPlayerTracker" xml:space="preserve">
         <value>Show Open PlayerTrack</value>

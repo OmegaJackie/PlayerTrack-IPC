@@ -1,4 +1,5 @@
-﻿using Dalamud.Game.Gui.ContextMenu;
+﻿using System.Collections.Generic;
+using Dalamud.Game.Gui.ContextMenu;
 using PlayerTrack.Data;
 using PlayerTrack.Domain;
 using PlayerTrack.Extensions;
@@ -51,6 +52,40 @@ public static class ContextMenuHandler
                 OnClicked = OpenLodestone
             });
         }
+        if (ServiceContext.ConfigService.GetConfig().ShowAddToCategory &&
+            ServiceContext.CategoryService.GetCategories().Count > 0)
+        {
+            menuOpenedArgs.AddMenuItem(new MenuItem
+            {
+                PrefixChar = PrefixChar,
+                Name = Language.AddToCategory,
+                IsSubmenu = true,
+                OnClicked = OpenAddToCategorySubmenu
+            });
+        }
+    }
+
+    private static void OpenAddToCategorySubmenu(IMenuItemClickedArgs menuItemClickedArgs)
+    {
+        var selectedPlayer = menuItemClickedArgs.GetPlayer();
+        if (selectedPlayer == null)
+            return;
+
+        // Snapshot the categories at open time and build one entry per category.
+        // The player is captured in the closure so the child click doesn't need to
+        // re-resolve the target.
+        var submenuItems = new List<MenuItem>();
+        foreach (var category in ServiceContext.CategoryService.GetCategories())
+        {
+            var categoryId = category.Id;
+            submenuItems.Add(new MenuItem
+            {
+                Name = category.Name,
+                OnClicked = _ => PlayerCategoryService.AddPlayerToCategory(selectedPlayer, categoryId)
+            });
+        }
+
+        menuItemClickedArgs.OpenSubmenu(Language.AddToCategory, submenuItems);
     }
 
     private static void OpenPlayerTrack(IMenuItemClickedArgs menuItemClickedArgs)

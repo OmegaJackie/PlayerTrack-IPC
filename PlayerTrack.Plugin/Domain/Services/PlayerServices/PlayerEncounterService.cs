@@ -17,9 +17,11 @@ public class PlayerEncounterService
     public static void DeletePlayerEncountersByPlayer(int playerId) =>
         RepositoryContext.PlayerEncounterRepository.DeleteAllByPlayerId(playerId);
 
+    // CreatePlayerEncounter/GetEncounterLocation/EndPlayerEncounter all run once per
+    // player entering or leaving the object table, so their entry and early-return
+    // tracing has been removed -- it dominated the log in populated zones.
     public static int CreatePlayerEncounter(PlayerData toadPlayer, Player player)
     {
-        Plugin.PluginLog.Verbose($"Entering PlayerEncounterService.CreatePlayerEncounter(): {toadPlayer.ContentId}, {player.Id}");
         if (player.Id == 0)
         {
             Plugin.PluginLog.Warning("Player Id is 0, cannot create player encounter.");
@@ -28,10 +30,7 @@ public class PlayerEncounterService
 
         var encId = ServiceContext.EncounterService.CurrentEncounter?.Id ?? 0;
         if (encId == 0)
-        {
-            Plugin.PluginLog.Verbose("Encounter Id is 0, cannot create player encounter.");
             return 0;
-        }
 
         var playerEncounter = RepositoryContext.PlayerEncounterRepository.GetByPlayerIdAndEncId(player.Id, encId);
         if (playerEncounter != null)
@@ -49,7 +48,6 @@ public class PlayerEncounterService
 
     public static LocationData GetEncounterLocation()
     {
-        Plugin.PluginLog.Verbose("Entering PlayerEncounterService.GetEncounterLocation()");
         var lastLocId = ServiceContext.EncounterService.CurrentEncounter?.TerritoryTypeId ?? 0;
         return Sheets.Locations[lastLocId];
     }
@@ -71,24 +69,14 @@ public class PlayerEncounterService
 
     public static void EndPlayerEncounter(Player player, Encounter? encounter)
     {
-        Plugin.PluginLog.Verbose($"Entering PlayerEncounterService.EndPlayerEncounter(): {player.Id}, {encounter?.Id}");
         if (encounter == null || encounter.Id == 0)
-        {
-            Plugin.PluginLog.Verbose("Encounter Id is 0, cannot end player encounter.");
             return;
-        }
 
         if (player.OpenPlayerEncounterId == 0)
-        {
-            Plugin.PluginLog.Verbose("Player open encounter Id is 0, cannot end player encounter.");
             return;
-        }
 
         if (!encounter.SaveEncounter)
-        {
-            Plugin.PluginLog.Verbose("Encounter is not set to save players, so won't try ending.");
             return;
-        }
 
         var pEnc = RepositoryContext.PlayerEncounterRepository.GetByPlayerIdAndEncId(player.Id, encounter.Id);
         if (pEnc == null)

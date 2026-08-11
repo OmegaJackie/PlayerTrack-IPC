@@ -25,65 +25,50 @@ public class PlayerConfigService
         };
     }
 
-    public static VisibilityType GetVisibilityType(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetVisibilityType(): {player.Name}");
-        return ExtractPlayerProperty(
+    // NOTE: these accessors are on the per-frame nameplate/visibility path and are
+    // called several times per player per update -- do not add logging here.
+
+    public static VisibilityType GetVisibilityType(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.VisibilityType).PropertyValue;
-    }
 
-    public static uint GetNameColor(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameColor(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static uint GetNameColor(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.PlayerListNameColor).PropertyValue;
-    }
 
-    public static char GetIcon(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetIcon(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static char GetIcon(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.PlayerListIcon).PropertyValue;
-    }
 
-    public static bool GetIsProximityAlertEnabled(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetIsProximityAlertEnabled(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static bool GetIsProximityAlertEnabled(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.AlertProximity).PropertyValue;
-    }
 
-    public static bool GetIsWorldTransferAlertEnabled(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetIsWorldTransferAlertEnabled(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static bool GetIsWorldTransferAlertEnabled(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.AlertWorldTransfer).PropertyValue;
-    }
 
-    public static bool GetIsNameChangeAlertEnabled(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetIsNameChangeAlertEnabled(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static bool GetIsNameChangeAlertEnabled(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.AlertNameChange).PropertyValue;
-    }
 
     public static long GetProximityAlertFrequency(Player player) =>
         ExtractPlayerProperty(
@@ -106,94 +91,67 @@ public class PlayerConfigService
             player.GetCategoryPlayerConfigs(),
             x => x.AlertNameChangeFrequency).PropertyValue;
 
-    public static bool GetNameplateShowInOverworld(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameplateShowInOverworld(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static bool GetNameplateShowInOverworld(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.NameplateShowInOverworld).PropertyValue;
-    }
 
-    public static bool GetNameplateShowInContent(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameplateShowInContent(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static bool GetNameplateShowInContent(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.NameplateShowInContent).PropertyValue;
-    }
 
-    public static bool GetNameplateShowInHighEndContent(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameplateShowInHighEndContent(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static bool GetNameplateShowInHighEndContent(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.NameplateShowInHighEndContent).PropertyValue;
-    }
 
-    public static bool GetNameplateUseColor(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameplateColorShowColor(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static bool GetNameplateUseColor(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.NameplateUseColor).PropertyValue;
-    }
 
-    public static uint GetNameplateColor(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameplateColor(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static uint GetNameplateColor(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.NameplateColor).PropertyValue;
-    }
 
-    public static bool GetNameplateUseColorIfDead(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameplateUseColorIfDead(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static bool GetNameplateUseColorIfDead(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.NameplateUseColorIfDead).PropertyValue;
-    }
 
-    public static NameplateTitleType GetNameplateTitleType(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameplateTitleType(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static NameplateTitleType GetNameplateTitleType(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.NameplateTitleType).PropertyValue;
-    }
 
-    public static string GetNameplateCustomTitle(Player player)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetNameplateCustomTitle(): {player.Name}");
-        return ExtractPlayerProperty(
+    public static string GetNameplateCustomTitle(Player player) =>
+        ExtractPlayerProperty(
             GetDefaultConfig(),
             player.PlayerConfig,
             player.GetCategoryPlayerConfigs(),
             x => x.NameplateCustomTitle).PropertyValue;
-    }
 
-    public static uint GetCategoryColor(Category category)
-    {
-        Plugin.PluginLog.Verbose($"Entering PlayerConfigService.GetCategoryColor(): {category.Name}");
-        return ExtractCategoryProperty(
+    public static uint GetCategoryColor(Category category) =>
+        ExtractCategoryProperty(
             GetDefaultConfig(),
             category.PlayerConfig,
             x => x.PlayerListNameColor).PropertyValue;
-    }
 
     public static void UpdateCategoryConfig(int categoryId, PlayerConfig config)
     {

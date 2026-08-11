@@ -101,9 +101,9 @@ public class PlayerRepository : BaseRepository
         return players.Values;
     }
 
+    // Called for every nearby player on every update -- keep it silent.
     public bool UpdatePlayer(Player player)
     {
-        Plugin.PluginLog.Verbose($"Entering PlayerRepository.UpdatePlayer(): {player.Id}");
         try
         {
             var playerDto = Mapper.Map<PlayerDTO>(player);

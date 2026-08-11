@@ -53,6 +53,34 @@ public static class PlayerViewMapper
         return string.IsNullOrEmpty(locationName) ? Na : locationName;
     }
 
+    /// <summary>
+    /// Builds the display location for an encounter: the zone/content name with the
+    /// captured housing address (ward / plot / apartment) appended when present,
+    /// e.g. "Mist - Ward 5, Plot 30".
+    /// </summary>
+    /// <param name="encounter">the encounter to describe.</param>
+    /// <returns>the display location.</returns>
+    private static string GetEncounterLocation(Encounter encounter)
+    {
+        var baseLocation = GetLastLocation(encounter.TerritoryTypeId);
+        var housing = new Data.HousingData
+        {
+            Ward = encounter.HousingWard,
+            Plot = encounter.HousingPlot,
+            Room = encounter.HousingRoom,
+            Division = encounter.HousingDivision,
+        };
+
+        if (!housing.HasHousing)
+            return baseLocation;
+
+        var housingText = housing.Format();
+        if (string.IsNullOrEmpty(housingText))
+            return baseLocation;
+
+        return baseLocation == Na ? housingText : $"{baseLocation} - {housingText}";
+    }
+
     private static string GetHomeWorld(uint worldId)
     {
         var worldName = Sheets.GetWorldNameById(worldId);
@@ -163,7 +191,7 @@ public static class PlayerViewMapper
                 Duration     = durationMs.ToDuration(),
                 Job          = Sheets.ClassJobs[pEnc.JobId].Code,
                 Level        = pEnc.JobLvl.ToString(),
-                Location     = GetLastLocation(enc.TerritoryTypeId),
+                Location     = GetEncounterLocation(enc),
                 LocationType = Sheets.Locations.TryGetValue(enc.TerritoryTypeId, out var loc)
                     ? loc.LocationType
                     : Data.LocationType.None,
