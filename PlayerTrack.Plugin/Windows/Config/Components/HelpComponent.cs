@@ -26,13 +26,24 @@ public class HelpComponent : ConfigViewComponent
         // Search Keys Section
         DrawSection(Language.SearchOptionsTitle, Language.SearchOptionsExplanation,
                     [
+                        Language.SearchOptionsExplanationName,
                         Language.SearchOptionsExplanationNotes,
                         Language.SearchOptionsExplanationFC,
                         Language.SearchOptionsExplanationTags,
+                        Language.SearchOptionsExplanationCategory,
                         Language.SearchOptionsExplanationRace,
+                        Language.SearchOptionsExplanationTribe,
                         Language.SearchOptionsExplanationGender,
                         Language.SearchOptionsExplanationWorld,
                         Language.SearchOptionsExplanationDC,
+                        Language.SearchOptionsExplanationPrevName,
+                        Language.SearchOptionsExplanationPrevWorld,
+                        Language.SearchOptionsExplanationBio,
+                        Language.SearchOptionsExplanationLodestone,
+                        Language.SearchOptionsExplanationSeen,
+                        Language.SearchOptionsExplanationFirstSeen,
+                        Language.SearchOptionsExplanationLastSeen,
+                        Language.SearchOptionsExplanationId,
                         Language.SearchOptionsExplanationDefault
                     ]);
 
@@ -43,7 +54,11 @@ public class HelpComponent : ConfigViewComponent
                 Language.AdvancedMatchingExplanationStart,
                 Language.AdvancedMatchingExplanationEnd,
                 Language.AdvancedMatchingExplanationContains,
-                Language.AdvancedMatchingExplanationExclude
+                Language.AdvancedMatchingExplanationMiddle,
+                Language.AdvancedMatchingExplanationExclude,
+                Language.AdvancedMatchingExplanationOr,
+                Language.AdvancedMatchingExplanationQuotes,
+                Language.AdvancedMatchingExplanationComparators
             ]);
 
         // Examples Section
@@ -51,7 +66,10 @@ public class HelpComponent : ConfigViewComponent
             [
                 Language.ExamplesExplanation1,
                 Language.ExamplesExplanation2,
-                Language.ExamplesExplanation3
+                Language.ExamplesExplanation3,
+                Language.ExamplesExplanation4,
+                Language.ExamplesExplanation5,
+                Language.ExamplesExplanation6
             ]);
     }
 

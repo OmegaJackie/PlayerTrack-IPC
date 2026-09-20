@@ -36,6 +36,9 @@
     <data name="AdvancedMatchingExplanation" xml:space="preserve">
         <value>Use these symbols to refine your search:</value>
     </data>
+    <data name="AdvancedMatchingExplanationComparators" xml:space="preserve">
+        <value>&gt;, &gt;=, &lt;, &lt;=: Compare numbers and ages, e.g. seen:&gt;=5 or lastseen:&lt;2w (units: h, d, w, m, y).</value>
+    </data>
     <data name="AdvancedMatchingExplanationContains" xml:space="preserve">
         <value>*text*: Match anything containing 'text'.</value>
     </data>
@@ -47,6 +50,15 @@
     </data>
     <data name="AdvancedMatchingExplanationExclude" xml:space="preserve">
         <value>!text: Exclude matches with 'text'.</value>
+    </data>
+    <data name="AdvancedMatchingExplanationMiddle" xml:space="preserve">
+        <value>te*t: Wildcards can also go in the middle of the text.</value>
+    </data>
+    <data name="AdvancedMatchingExplanationOr" xml:space="preserve">
+        <value>a|b: Match either 'a' or 'b'.</value>
+    </data>
+    <data name="AdvancedMatchingExplanationQuotes" xml:space="preserve">
+        <value>"two words": Use quotes to search for text with spaces.</value>
     </data>
     <data name="AdvancedMatchingExplanationStart" xml:space="preserve">
         <value>text*: Match anything starting with 'text'.</value>
@@ -236,6 +248,15 @@
     </data>
     <data name="ExamplesExplanation3" xml:space="preserve">
         <value>fc:uwu =&gt; Find players in the Free Company 'uwu'.</value>
+    </data>
+    <data name="ExamplesExplanation4" xml:space="preserve">
+        <value>world:balmung|gilgamesh =&gt; Find players on Balmung or Gilgamesh.</value>
+    </data>
+    <data name="ExamplesExplanation5" xml:space="preserve">
+        <value>lastseen:&lt;7d seen:&gt;5 =&gt; Players seen more than 5 times, active within the last week.</value>
+    </data>
+    <data name="ExamplesExplanation6" xml:space="preserve">
+        <value>prevname:* =&gt; Find players who have changed their name.</value>
     </data>
     <data name="ExamplesTitle" xml:space="preserve">
         <value>Examples</value>
@@ -702,6 +723,12 @@
     <data name="SearchOptionsExplanation" xml:space="preserve">
         <value>Use these options to narrow your search:</value>
     </data>
+    <data name="SearchOptionsExplanationBio" xml:space="preserve">
+        <value>bio: Search collected adventurer plate bios (matches anywhere in the text).</value>
+    </data>
+    <data name="SearchOptionsExplanationCategory" xml:space="preserve">
+        <value>category: Find players in a specific category.</value>
+    </data>
     <data name="SearchOptionsExplanationDC" xml:space="preserve">
         <value>dc: Find players by their data center.</value>
     </data>
@@ -711,17 +738,44 @@
     <data name="SearchOptionsExplanationFC" xml:space="preserve">
         <value>fc: Find players in a specific Free Company.</value>
     </data>
+    <data name="SearchOptionsExplanationFirstSeen" xml:space="preserve">
+        <value>firstseen: Filter by how long ago a player was first seen, e.g. firstseen:&lt;7d.</value>
+    </data>
     <data name="SearchOptionsExplanationGender" xml:space="preserve">
         <value>gender: Search for players by character gender.</value>
+    </data>
+    <data name="SearchOptionsExplanationId" xml:space="preserve">
+        <value>id: Find a player by their PlayerTrack id.</value>
+    </data>
+    <data name="SearchOptionsExplanationLastSeen" xml:space="preserve">
+        <value>lastseen: Filter by how long ago a player was last seen, e.g. lastseen:&gt;30d.</value>
+    </data>
+    <data name="SearchOptionsExplanationLodestone" xml:space="preserve">
+        <value>lodestone: Filter by Lodestone status or id, e.g. lodestone:verified.</value>
+    </data>
+    <data name="SearchOptionsExplanationName" xml:space="preserve">
+        <value>name: Search by character name.</value>
     </data>
     <data name="SearchOptionsExplanationNotes" xml:space="preserve">
         <value>notes: Look for players with specific notes.</value>
     </data>
+    <data name="SearchOptionsExplanationPrevName" xml:space="preserve">
+        <value>prevname: Find players by a previously seen name.</value>
+    </data>
+    <data name="SearchOptionsExplanationPrevWorld" xml:space="preserve">
+        <value>prevworld: Find players by a previously seen home world.</value>
+    </data>
     <data name="SearchOptionsExplanationRace" xml:space="preserve">
         <value>race: Search for players with by character race.</value>
     </data>
+    <data name="SearchOptionsExplanationSeen" xml:space="preserve">
+        <value>seen: Filter by number of times seen, e.g. seen:&gt;10.</value>
+    </data>
     <data name="SearchOptionsExplanationTags" xml:space="preserve">
         <value>tags: Search for players with specific tags.</value>
+    </data>
+    <data name="SearchOptionsExplanationTribe" xml:space="preserve">
+        <value>tribe: Search for players by character tribe (clan).</value>
     </data>
     <data name="SearchOptionsExplanationWorld" xml:space="preserve">
         <value>world: Find players by their home world.</value>

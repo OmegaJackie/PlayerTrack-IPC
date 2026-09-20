@@ -149,6 +149,26 @@ public class Player : IComparable<Player>, IEquatable<Player>
         return string.Empty;
     }
 
+    public string TribeName()
+    {
+        var customizeArr = Customize;
+        if (customizeArr is { Length: > 0 })
+        {
+            var customize = CharaCustomizeData.MapCustomizeData(customizeArr);
+            if (!Sheets.Tribes.TryGetValue(customize.Tribe, out var tribe))
+                return string.Empty;
+
+            return customize.Gender switch
+            {
+                0 => tribe.MasculineName,
+                1 => tribe.FeminineName,
+                _ => string.Empty
+            };
+        }
+
+        return string.Empty;
+    }
+
     public string GenderName()
     {
         var customizeArr = Customize;

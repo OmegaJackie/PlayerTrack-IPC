@@ -185,7 +185,7 @@ public class PlayerListComponent : ViewComponent
                         PendingFilterUpdate = true;
                         Presenter.ClearCache();
                     }
-                    else if (IsValidInput(searchInput))
+                    else if (PlayerSearchService.IsValidSearch(searchInput))
                     {
                         Config.SearchInput = searchInput;
                         LastInputTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -231,23 +231,6 @@ public class PlayerListComponent : ViewComponent
 
         if (ImGui.MenuItem(Language.OpenSettings))
             OnPlayerListComponentOpenConfig?.Invoke();
-    }
-
-
-    private static bool IsValidInput(string input)
-    {
-        var colonIndex = input.IndexOf(':');
-        if (colonIndex == input.Length - 1)
-            return false;
-
-        if (colonIndex == -1)
-            return !input.Contains('!') && !input.Contains('*');
-
-        for (var i = 0; i < colonIndex; i++)
-            if (input[i] == '!' || input[i] == '*')
-                return false;
-
-        return true;
     }
 
     private void DrawPlayer(Player player)

@@ -82,6 +82,81 @@ public class PlayerChangeService
         return nameWorldHistories == null ? [] : nameWorldHistories.ToList();
     }
 
+    /// <summary>
+    /// Populates PreviousNames/PreviousWorlds on all players with a single bulk query.
+    /// </summary>
+    public static void PopulateNameWorldHistories(List<Player> players)
+    {
+        var histories = GetAllPlayerNameWorldHistories();
+        if (histories.Count == 0)
+            return;
+
+        var playersById = new Dictionary<int, Player>(players.Count);
+        foreach (var player in players)
+            playersById[player.Id] = player;
+
+        foreach (var group in histories.GroupBy(history => history.PlayerId))
+        {
+            if (playersById.TryGetValue(group.Key, out var player))
+                ApplyNameWorldHistory(player, group);
+        }
+    }
+
+    public static void PopulateNameWorldHistory(Player player) =>
+        ApplyNameWorldHistory(player, GetPlayerNameWorldHistory(player.Id));
+
+    /// <summary>
+    /// Updates the in-memory PreviousNames/PreviousWorlds for a name/world change,
+    /// avoiding a re-fetch of the history table. Call before overwriting the player's
+    /// current name/world with the new values.
+    /// </summary>
+    public static void TrackNameWorldChange(Player player, string newName, uint newWorldId)
+    {
+        if (!string.Equals(player.Name, newName, StringComparison.OrdinalIgnoreCase))
+        {
+            player.PreviousNames = player.PreviousNames
+                .Append(player.Name)
+                .Where(name => !string.Equals(name, newName, StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
+        if (player.WorldId != newWorldId)
+        {
+            var newWorldName = Sheets.GetWorldNameById(newWorldId);
+            player.PreviousWorlds = player.PreviousWorlds
+                .Append(Sheets.GetWorldNameById(player.WorldId))
+                .Where(world => !string.Equals(world, newWorldName, StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+    }
+
+    private static void ApplyNameWorldHistory(Player player, IEnumerable<PlayerNameWorldHistory> histories)
+    {
+        var names = new List<string>();
+        var worlds = new List<string>();
+        foreach (var history in histories)
+        {
+            if (!string.IsNullOrEmpty(history.PlayerName))
+                names.Add(history.PlayerName);
+
+            if (history.WorldId != 0)
+                worlds.Add(Sheets.GetWorldNameById(history.WorldId));
+        }
+
+        var currentWorldName = player.WorldName();
+        player.PreviousNames = names
+            .Where(name => !string.Equals(name, player.Name, StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        player.PreviousWorlds = worlds
+            .Where(world => !string.IsNullOrEmpty(world) && !string.Equals(world, currentWorldName, StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
     public static List<PlayerCustomizeHistory> GetPlayerCustomizeHistory(int playerId)
     {
         Plugin.PluginLog.Verbose($"Entering PlayerChangeService.GetPlayerCustomizeHistory(): {playerId}");

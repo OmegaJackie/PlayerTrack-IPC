@@ -177,6 +177,15 @@ namespace PlayerTrack.Resource {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &gt;, &gt;=, &lt;, &lt;=: Compare numbers and ages, e.g. seen:&gt;=5 or lastseen:&lt;2w (units: h, d, w, m, y)..
+        /// </summary>
+        internal static string AdvancedMatchingExplanationComparators {
+            get {
+                return ResourceManager.GetString("AdvancedMatchingExplanationComparators", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to *text*: Match anything containing &apos;text&apos;..
         /// </summary>
         internal static string AdvancedMatchingExplanationContains {
@@ -212,6 +221,33 @@ namespace PlayerTrack.Resource {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to te*t: Wildcards can also go in the middle of the text..
+        /// </summary>
+        internal static string AdvancedMatchingExplanationMiddle {
+            get {
+                return ResourceManager.GetString("AdvancedMatchingExplanationMiddle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to a|b: Match either &apos;a&apos; or &apos;b&apos;..
+        /// </summary>
+        internal static string AdvancedMatchingExplanationOr {
+            get {
+                return ResourceManager.GetString("AdvancedMatchingExplanationOr", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to &quot;two words&quot;: Use quotes to search for text with spaces..
+        /// </summary>
+        internal static string AdvancedMatchingExplanationQuotes {
+            get {
+                return ResourceManager.GetString("AdvancedMatchingExplanationQuotes", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to text*: Match anything starting with &apos;text&apos;..
         /// </summary>
@@ -778,7 +814,34 @@ namespace PlayerTrack.Resource {
                 return ResourceManager.GetString("ExamplesExplanation3", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to world:balmung|gilgamesh =&gt; Find players on Balmung or Gilgamesh..
+        /// </summary>
+        internal static string ExamplesExplanation4 {
+            get {
+                return ResourceManager.GetString("ExamplesExplanation4", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to lastseen:&lt;7d seen:&gt;5 =&gt; Players seen more than 5 times, active within the last week..
+        /// </summary>
+        internal static string ExamplesExplanation5 {
+            get {
+                return ResourceManager.GetString("ExamplesExplanation5", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to prevname:* =&gt; Find players who have changed their name..
+        /// </summary>
+        internal static string ExamplesExplanation6 {
+            get {
+                return ResourceManager.GetString("ExamplesExplanation6", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Examples.
         /// </summary>
@@ -2182,7 +2245,34 @@ namespace PlayerTrack.Resource {
                 return ResourceManager.GetString("SearchOptionsExplanationFC", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to bio: Search collected adventurer plate bios (matches anywhere in the text)..
+        /// </summary>
+        internal static string SearchOptionsExplanationBio {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationBio", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to category: Find players in a specific category..
+        /// </summary>
+        internal static string SearchOptionsExplanationCategory {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationCategory", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to firstseen: Filter by how long ago a player was first seen, e.g. firstseen:&lt;7d..
+        /// </summary>
+        internal static string SearchOptionsExplanationFirstSeen {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationFirstSeen", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to gender: Search for players by character gender..
         /// </summary>
@@ -2191,7 +2281,43 @@ namespace PlayerTrack.Resource {
                 return ResourceManager.GetString("SearchOptionsExplanationGender", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to id: Find a player by their PlayerTrack id..
+        /// </summary>
+        internal static string SearchOptionsExplanationId {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationId", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to lastseen: Filter by how long ago a player was last seen, e.g. lastseen:&gt;30d..
+        /// </summary>
+        internal static string SearchOptionsExplanationLastSeen {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationLastSeen", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to lodestone: Filter by Lodestone status or id, e.g. lodestone:verified..
+        /// </summary>
+        internal static string SearchOptionsExplanationLodestone {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationLodestone", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to name: Search by character name..
+        /// </summary>
+        internal static string SearchOptionsExplanationName {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationName", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to notes: Look for players with specific notes..
         /// </summary>
@@ -2200,7 +2326,25 @@ namespace PlayerTrack.Resource {
                 return ResourceManager.GetString("SearchOptionsExplanationNotes", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to prevname: Find players by a previously seen name..
+        /// </summary>
+        internal static string SearchOptionsExplanationPrevName {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationPrevName", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to prevworld: Find players by a previously seen home world..
+        /// </summary>
+        internal static string SearchOptionsExplanationPrevWorld {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationPrevWorld", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to race: Search for players with by character race..
         /// </summary>
@@ -2209,7 +2353,16 @@ namespace PlayerTrack.Resource {
                 return ResourceManager.GetString("SearchOptionsExplanationRace", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to seen: Filter by number of times seen, e.g. seen:&gt;10..
+        /// </summary>
+        internal static string SearchOptionsExplanationSeen {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationSeen", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to tags: Search for players with specific tags..
         /// </summary>
@@ -2218,7 +2371,16 @@ namespace PlayerTrack.Resource {
                 return ResourceManager.GetString("SearchOptionsExplanationTags", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to tribe: Search for players by character tribe (clan)..
+        /// </summary>
+        internal static string SearchOptionsExplanationTribe {
+            get {
+                return ResourceManager.GetString("SearchOptionsExplanationTribe", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to world: Find players by their home world..
         /// </summary>

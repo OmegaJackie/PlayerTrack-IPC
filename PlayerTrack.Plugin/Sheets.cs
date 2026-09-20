@@ -15,6 +15,7 @@ public static class Sheets
     public static readonly ReadOnlyDictionary<uint, WorldData> Worlds;
     public static readonly ReadOnlyDictionary<uint, DCData> DataCenters;
     public static readonly ReadOnlyDictionary<uint, RaceData> Races;
+    public static readonly ReadOnlyDictionary<uint, TribeData> Tribes;
     public static readonly ReadOnlyDictionary<uint, UiColorData> UiColor;
     public static readonly ReadOnlyDictionary<uint, ClassJobData> ClassJobs;
     public static readonly ReadOnlyDictionary<uint, LocationData> Locations;
@@ -44,6 +45,7 @@ public static class Sheets
         Worlds = new(LoadWorlds());
         DataCenters = new(LoadDataCenters());
         Races = new(LoadRaces());
+        Tribes = new(LoadTribes());
         UiColor = new(LoadUiColors());
         Locations = new(LoadLocations());
         ClassJobs = new(LoadClassJobs());

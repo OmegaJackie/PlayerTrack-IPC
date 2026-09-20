@@ -44,6 +44,27 @@ public class PlayerBioRepository : BaseRepository
         }
     }
 
+    /// <summary>Returns the most recent bio text for each player that has one, keyed by player id.</summary>
+    public Dictionary<int, string> GetLatestBios()
+    {
+        try
+        {
+            // Only the newest row per player; id is monotonic so MAX(id) is the latest entry.
+            const string sql = "SELECT player_id, bio FROM player_bios WHERE id IN (SELECT MAX(id) FROM player_bios GROUP BY player_id)";
+            var dtos = Connection.Query<PlayerBioDTO>(sql);
+            var bios = new Dictionary<int, string>();
+            foreach (var dto in dtos)
+                bios[dto.player_id] = dto.bio;
+
+            return bios;
+        }
+        catch (Exception ex)
+        {
+            Plugin.PluginLog.Error(ex, "[PlayerBioRepository] Failed to get latest bios.");
+            return [];
+        }
+    }
+
     /// <summary>Inserts a new bio entry and returns its new row ID.</summary>
     public int CreatePlayerBio(PlayerBio bio)
     {

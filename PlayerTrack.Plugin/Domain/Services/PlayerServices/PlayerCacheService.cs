@@ -684,6 +684,8 @@ public class PlayerCacheService
     private void FetchDataFromDatabase()
     {
         DbPlayers = RepositoryContext.PlayerRepository.GetAllPlayersWithRelations().ToList();
+        PlayerChangeService.PopulateNameWorldHistories(DbPlayers);
+        PlayerBioService.InvalidateCache();
         DbCategoryRanks = ServiceContext.CategoryService.GetCategoryRanks();
     }
 

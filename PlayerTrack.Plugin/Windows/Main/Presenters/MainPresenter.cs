@@ -29,6 +29,7 @@ public class MainPresenter : IMainPresenter
     private long PlayerCacheLastUpdated;
     private long PlayerCountCacheLastUpdated;
     private string LastSearchInput = string.Empty;
+    private SearchType LastSearchType = SearchType.Contains;
 
     private long LastCacheClear = Environment.TickCount64;
     private long LastDelayedCacheClear = Environment.TickCount64;
@@ -246,10 +247,11 @@ public class MainPresenter : IMainPresenter
 
     private void InvalidateCacheIfSearchChanged()
     {
-        if (LastSearchInput != Config.SearchInput)
+        if (LastSearchInput != Config.SearchInput || LastSearchType != Config.SearchType)
         {
             ClearCache();
             LastSearchInput = Config.SearchInput;
+            LastSearchType = Config.SearchType;
         }
     }
 

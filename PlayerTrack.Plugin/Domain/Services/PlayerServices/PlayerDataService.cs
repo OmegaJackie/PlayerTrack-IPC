@@ -214,6 +214,9 @@ public class PlayerDataService
         if (playerToUpdate.IsCurrent)
             ServiceContext.PlayerProcessService.RegisterCurrentPlayer(playerToUpdate);
 
+        // refresh name/world history fields now that records are re-parented
+        PlayerChangeService.PopulateNameWorldHistory(playerToUpdate);
+
         // update player in repo & cache
         RepositoryContext.PlayerRepository.UpdatePlayer(playerToUpdate);
         ServiceContext.PlayerCacheService.AddPlayer(playerToUpdate);
