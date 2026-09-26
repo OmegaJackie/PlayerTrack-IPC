@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Dalamud.Game.Text;
 using Dalamud.Interface;
 using Newtonsoft.Json;
 using PlayerTrack.Data;
@@ -126,6 +127,10 @@ public class PluginConfig : IPluginConfig
     public bool OnlyShowWindowWhenLoggedIn { get; set; }
 
     public NoCategoryPlacement NoCategoryPlacement { get; set; } = NoCategoryPlacement.Bottom;
+
+    public bool UseCustomChatChannel { get; set; }
+
+    public XivChatType CustomChatChannel { get; set; } = XivChatType.Notice;
 
     // ----------------------------------------------------------------
     // Categorizer settings
